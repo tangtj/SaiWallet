@@ -29,11 +29,12 @@ contract WalletOperator {
         for (uint256 i = 0; i < num; i++) {
             Wallet w = Wallet(payable(Clones.clone(clone)));
             w.initialize(caller);
+            wallet.push(w);
         }
         deployCount += num;
 
-        whitelist[msg.sender][caller] = true;
-        whitelist[msg.sender][address(this)] = true;
+        whitelist[caller][caller] = true;
+        whitelist[caller][address(this)] = true;
     }
 
 

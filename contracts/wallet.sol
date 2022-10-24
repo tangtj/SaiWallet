@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.0;
 
-
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-
 
 interface IOperator {
     function whitelist(address, address) external view returns (bool);
 }
 
-contract Wallet is Initializable, IERC721Receiver {
-    address public owner;
-    address public factory;
+contract Wallet {
 
-    function initialize(address _owner) public initializer {
+    bool _initialed;
+
+    address private owner;
+    address private factory;
+
+    function initialize(address _owner) public {
+        require(!_initialed, "contract always initial");
+        _initialed = true;
+
         owner = _owner;
         factory = msg.sender;
     }
@@ -55,7 +57,7 @@ contract Wallet is Initializable, IERC721Receiver {
         _;
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
-} 
+}
