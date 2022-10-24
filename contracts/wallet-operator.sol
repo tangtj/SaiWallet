@@ -32,6 +32,8 @@ contract WalletOperator {
         }
         deployCount += num;
 
+        whitelist[msg.sender][caller] = true;
+        whitelist[msg.sender][address(this)] = true;
     }
 
 
