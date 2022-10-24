@@ -15,15 +15,9 @@ contract Wallet is Initializable, IERC721Receiver {
     address public owner;
     address public factory;
 
-    mapping(address => bool) public whitelist;
-
     function initialize(address _owner) public initializer {
         owner = _owner;
         factory = msg.sender;
-        // owner address
-        whitelist[_owner] = true;
-        // factory address
-        whitelist[factory] = true;
     }
 
     function invoke(address addr, bytes calldata data)
