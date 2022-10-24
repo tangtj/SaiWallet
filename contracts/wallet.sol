@@ -36,18 +36,18 @@ contract Wallet is Initializable, IERC721Receiver {
         return success;
     }
 
-    function withdraw(address payable reciver) public payable checkCaller {
+    function withdraw(address payable receiver) public payable checkCaller {
         uint256 balance = address(this).balance;
         if (balance > 0) {
-            reciver.transfer(balance);
+            receiver.transfer(balance);
         }
     }
 
-    function withdrawToken(address reciver, address token) public checkCaller {
+    function withdrawToken(address receiver, address token) public checkCaller {
         IERC20 _t = IERC20(token);
         uint256 balance = _t.balanceOf(address(this));
         if (balance > 0) {
-            _t.transfer(reciver, balance);
+            _t.transfer(receiver, balance);
         }
     }
 

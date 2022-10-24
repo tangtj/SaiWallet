@@ -55,33 +55,33 @@ contract WalletOperator {
         }
     }
 
-    function withdrawAll(address payable reciver) public {
+    function withdrawAll(address payable receiver) public {
         Wallet[] memory addrs = wallets[msg.sender];
         uint256 size = addrs.length;
         for (uint256 i = 0; i < size; i++) {
-            addrs[i].withdraw(reciver);
+            addrs[i].withdraw(receiver);
         }
     }
 
-    function withdrawBatch(address payable reciver, address[] calldata addrs) public {
+    function withdrawBatch(address payable receiver, address[] calldata addrs) public {
         uint256 size = addrs.length;
         for (uint256 i = 0; i < size; i++) {
-            Wallet(payable(addrs[i])).withdraw(reciver);
+            Wallet(payable(addrs[i])).withdraw(receiver);
         }
     }
 
-    function withdrawTokenAll(address payable reciver, address token) public {
+    function withdrawTokenAll(address receiver, address token) public {
         Wallet[] memory addrs = wallets[msg.sender];
         uint256 size = addrs.length;
         for (uint256 i = 0; i < size; i++) {
-            addrs[i].withdrawToken(reciver, token);
+            addrs[i].withdrawToken(receiver, token);
         }
     }
 
-    function withdrawTokenBatch(address payable reciver, address token, address[] calldata addrs) public {
+    function withdrawTokenBatch(address payable receiver, address token, address[] calldata addrs) public {
         uint256 size = addrs.length;
         for (uint256 i = 0; i < size; i++) {
-            Wallet(payable(addrs[i])).withdrawToken(reciver, token);
+            Wallet(payable(addrs[i])).withdrawToken(receiver, token);
         }
     }
 
