@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 
 interface IOperator {
-    function whitelist(address,address) external view returns(bool);
+    function whitelist(address, address) external view returns (bool);
 }
 
 contract Wallet is Initializable, IERC721Receiver {
@@ -27,12 +27,12 @@ contract Wallet is Initializable, IERC721Receiver {
     }
 
     function invoke(address addr, bytes calldata data)
-        public
-        payable
-        checkCaller
-        returns (bool)
+    public
+    payable
+    checkCaller
+    returns (bool)
     {
-        (bool success, ) = addr.call{value: msg.value}(data);
+        (bool success,) = addr.call{value : msg.value}(data);
         return success;
     }
 
@@ -67,13 +67,13 @@ contract Wallet is Initializable, IERC721Receiver {
 
     modifier checkCaller() {
         require(
-            tx.origin == owner && IOperator(factory).whitelist(tx.origin,msg.sender),
+            tx.origin == owner && IOperator(factory).whitelist(tx.origin, msg.sender),
             "caller not allow"
         );
         _;
     }
 
-    function onERC721Received(address,address,uint256,bytes calldata) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 } 
