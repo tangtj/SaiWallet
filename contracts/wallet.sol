@@ -51,18 +51,6 @@ contract Wallet is Initializable, IERC721Receiver {
         }
     }
 
-    function changeWhitelist(address[] calldata addrs, bool status) public {
-        // only allow owner call factory to change white list
-        require(
-            tx.origin == owner && msg.sender == factory,
-            "caller not allow"
-        );
-        uint256 size = addrs.length;
-        for (uint256 i = 0; i < size; i++) {
-            whitelist[addrs[i]] = status;
-        }
-    }
-
     receive() external payable {}
 
     modifier checkCaller() {

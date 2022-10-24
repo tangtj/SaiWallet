@@ -90,9 +90,7 @@ contract WalletOperator {
         uint256 size = addrs.length;
         for (uint256 i = 0; i < size; i++) {
             if (status) {
-                if (list[addrs[i]] == false) {
-                    list[addrs[i]] = true;
-                }
+                list[addrs[i]] = true;
             } else {
                 delete list[addrs[i]];
             }
