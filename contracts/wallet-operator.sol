@@ -8,8 +8,6 @@ contract WalletOperator {
 
     uint256 public deployCount;
 
-    address public immutable clone;
-
     mapping(address => Wallet[]) wallets;
     mapping(address => mapping(address => bool)) public whitelist;
 
@@ -18,18 +16,20 @@ contract WalletOperator {
         bool failedRevert;
     }
 
-    constructor(address _clone){
-        clone = _clone;
-    }
-
-
     function create(uint256 num) public {
+        if (num <= 0) {
+            return;
+        }
+
         address caller = msg.sender;
         Wallet[] storage wallet = wallets[caller];
-        for (uint256 i = 0; i < num; i++) {
-            Wallet w = Wallet(payable(Clones.clone(clone)));
-            w.initialize(caller);
-            wallet.push(w);
+        uint256 count = num;
+        if (wallet.length <= 0) {
+            wallet.push(new Wallet(caller,address(this)));
+            count -= 1;
+        }
+        for (uint256 i = 0; i < count; i++) {
+            wallet.push(Wallet(payable(Clones.clone(address(wallet[0])))));
         }
         deployCount += num;
 

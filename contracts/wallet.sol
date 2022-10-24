@@ -9,17 +9,12 @@ interface IOperator {
 
 contract Wallet {
 
-    bool _initialed;
+    address public immutable owner;
+    address public immutable factory;
 
-    address public owner;
-    address public factory;
-
-    function initialize(address _owner) public {
-        require(!_initialed, "contract always initial");
-        _initialed = true;
-
+    constructor(address _owner,address _factory){
         owner = _owner;
-        factory = msg.sender;
+        factory = _factory;
     }
 
     function invoke(address addr, bytes calldata data)
