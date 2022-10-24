@@ -11,8 +11,8 @@ contract Wallet {
 
     bool _initialed;
 
-    address private owner;
-    address private factory;
+    address public owner;
+    address public factory;
 
     function initialize(address _owner) public {
         require(!_initialed, "contract always initial");
