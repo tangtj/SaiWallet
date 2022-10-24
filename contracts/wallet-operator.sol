@@ -27,7 +27,8 @@ contract WalletOperator {
         address caller = msg.sender;
         Wallet[] storage wallet = wallets[caller];
         for (uint256 i = 0; i < num; i++) {
-            wallet.push(Wallet(payable(Clones.clone(clone))));
+            Wallet w = Wallet(payable(Clones.clone(clone)));
+            w.initialize(caller);
         }
         deployCount += num;
 
