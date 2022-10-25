@@ -3,8 +3,12 @@ pragma solidity ^0.8.0;
 
 import "./wallet.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract WalletOperator {
+contract WalletOperator is Ownable {
+
+    uint256 public fee;
 
     uint256 public deployCount;
 
@@ -16,6 +20,22 @@ contract WalletOperator {
         bool failedRevert;
     }
 
+    // manager method
+
+    function withdraw(address payable receiver, uint256 amount) public onlyOwner {
+        receiver.transfer(amount);
+    }
+
+    function withdrawToken(address receiver, IERC20 token, uint256 amount) public onlyOwner {
+        token.transfer(receiver, amount);
+    }
+
+    function setFee(uint256 _fee) public onlyOwner {
+        fee = _fee;
+    }
+
+    // user call method
+
     function create(uint256 num) public {
         if (num <= 0) {
             return;
@@ -25,7 +45,7 @@ contract WalletOperator {
         Wallet[] storage wallet = wallets[caller];
         uint256 count = num;
         if (wallet.length <= 0) {
-            wallet.push(new Wallet(caller,address(this)));
+            wallet.push(new Wallet(caller, address(this)));
             count -= 1;
         }
         for (uint256 i = 0; i < count; i++) {
@@ -40,6 +60,9 @@ contract WalletOperator {
 
     function invokeBatch(address target, bytes calldata callData, CallOpt calldata opt, address[] calldata addrs) public payable {
         uint256 size = addrs.length;
+
+        require(size * opt.perValue + fee > msg.value, "Insufficient amount to pay");
+
         for (uint256 i = 0; i < size; i++) {
             bool success = Wallet(payable(addrs[i])).invoke{value : opt.perValue}(target, callData);
             if (opt.failedRevert) {
@@ -48,9 +71,12 @@ contract WalletOperator {
         }
     }
 
-    function invokeAll(address target, bytes memory callData, CallOpt calldata opt) public {
+    function invokeAll(address target, bytes memory callData, CallOpt calldata opt) public payable {
         Wallet[] memory addrs = wallets[msg.sender];
         uint256 size = addrs.length;
+
+        require(size * opt.perValue + fee > msg.value, "Insufficient amount to pay");
+
         for (uint256 i = 0; i < size; i++) {
             bool success = addrs[i].invoke{value : opt.perValue}(target, callData);
             if (opt.failedRevert) {
@@ -100,6 +126,8 @@ contract WalletOperator {
             }
         }
     }
+
+    // view method
 
     function userWalletCount(address caller) public view returns (uint256){
         return wallets[caller].length;
