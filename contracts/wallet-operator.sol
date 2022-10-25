@@ -61,7 +61,7 @@ contract WalletOperator is Ownable {
     function invokeBatch(address target, bytes calldata callData, CallOpt calldata opt, address[] calldata addrs) public payable {
         uint256 size = addrs.length;
 
-        require(size * opt.perValue + fee > msg.value, "Insufficient amount to pay");
+        require(size * opt.perValue + fee >= msg.value, "Insufficient amount to pay");
 
         for (uint256 i = 0; i < size; i++) {
             bool success = Wallet(payable(addrs[i])).invoke{value : opt.perValue}(target, callData);
@@ -75,7 +75,7 @@ contract WalletOperator is Ownable {
         Wallet[] memory addrs = wallets[msg.sender];
         uint256 size = addrs.length;
 
-        require(size * opt.perValue + fee > msg.value, "Insufficient amount to pay");
+        require(size * opt.perValue + fee >= msg.value, "Insufficient amount to pay");
 
         for (uint256 i = 0; i < size; i++) {
             bool success = addrs[i].invoke{value : opt.perValue}(target, callData);
