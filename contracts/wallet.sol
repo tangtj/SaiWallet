@@ -12,7 +12,7 @@ contract Wallet {
     address public immutable owner;
     address public immutable factory;
 
-    constructor(address _owner,address _factory){
+    constructor(address _owner, address _factory){
         owner = _owner;
         factory = _factory;
     }
@@ -28,18 +28,11 @@ contract Wallet {
     }
 
     function withdraw(address payable receiver) public payable checkCaller {
-        uint256 balance = address(this).balance;
-        if (balance > 0) {
-            receiver.transfer(balance);
-        }
+        receiver.transfer(address(this).balance);
     }
 
-    function withdrawToken(address receiver, address token) public checkCaller {
-        IERC20 _t = IERC20(token);
-        uint256 balance = _t.balanceOf(address(this));
-        if (balance > 0) {
-            _t.transfer(receiver, balance);
-        }
+    function withdrawToken(address receiver, IERC20 token) public checkCaller {
+        token.transfer(receiver, token.balanceOf(address(this)));
     }
 
     receive() external payable {}

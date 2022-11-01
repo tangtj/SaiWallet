@@ -12,12 +12,16 @@ contract WalletOperator is Ownable {
 
     uint256 public deployCount;
 
-    mapping(address => Wallet[]) wallets;
+    mapping(address => address[]) wallets;
     mapping(address => mapping(address => bool)) public whitelist;
 
     struct CallOpt {
         uint256 perValue;
-        bool failedRevert;
+
+        // 0 pass 
+        // 1 revert 
+        // 2 finish
+        uint256 failedCase;
     }
 
     // manager method
@@ -42,14 +46,14 @@ contract WalletOperator is Ownable {
         }
 
         address caller = msg.sender;
-        Wallet[] storage wallet = wallets[caller];
+        address[] storage wallet = wallets[caller];
         uint256 count = num;
         if (wallet.length <= 0) {
-            wallet.push(new Wallet(caller, address(this)));
+            wallet.push(address(new Wallet(caller, address(this))));
             count -= 1;
         }
         for (uint256 i = 0; i < count; i++) {
-            wallet.push(Wallet(payable(Clones.clone(address(wallet[0])))));
+            wallet.push(Clones.clone(address(wallet[0])));
         }
         deployCount += num;
 
@@ -59,59 +63,63 @@ contract WalletOperator is Ownable {
 
 
     function invokeBatch(address target, bytes calldata callData, CallOpt calldata opt, address[] calldata addrs) public payable {
-        uint256 size = addrs.length;
+        _invoke(target, callData, opt, addrs);
+    }
 
+    function invokeAll(address target, bytes calldata callData, CallOpt calldata opt) public payable {
+        address[] memory addrs = wallets[msg.sender];
+        _invoke(target, callData, opt, addrs);
+    }
+
+    function withdrawAll(address payable receiver) public {
+        address[] memory addrs = wallets[msg.sender];
+        _withdraw(receiver, addrs);
+    }
+
+    function withdrawBatch(address payable receiver, address[] calldata addrs) public {
+        _withdraw(receiver, addrs);
+    }
+
+    function withdrawTokenAll(address payable receiver, IERC20 token) public {
+        address [] memory addrs = wallets[msg.sender];
+        _withdrawToken(receiver, token, addrs);
+    }
+
+    function _invoke(address target, bytes calldata callData, CallOpt calldata opt, address[] memory addrs) internal {
+        uint256 size = addrs.length;
         require(size * opt.perValue + fee >= msg.value, "Insufficient amount to pay");
 
         for (uint256 i = 0; i < size; i++) {
             bool success = Wallet(payable(addrs[i])).invoke{value : opt.perValue}(target, callData);
-            if (opt.failedRevert) {
-                require(success, "exec failure revert tx");
+            if (success == false) {
+                if (opt.failedCase == 1) {
+                    revert("failed revert tx");
+                } else if (opt.failedCase == 2) {
+                    return;
+                }
             }
         }
     }
 
-    function invokeAll(address target, bytes memory callData, CallOpt calldata opt) public payable {
-        Wallet[] memory addrs = wallets[msg.sender];
+    function withdrawTokenBatch(address payable receiver, IERC20 token, address[] calldata addrs) public {
+        _withdrawToken(receiver, token, addrs);
+    }
+
+    function _withdraw(address payable receiver, address[] memory addrs) internal {
         uint256 size = addrs.length;
-
-        require(size * opt.perValue + fee >= msg.value, "Insufficient amount to pay");
-
         for (uint256 i = 0; i < size; i++) {
-            bool success = addrs[i].invoke{value : opt.perValue}(target, callData);
-            if (opt.failedRevert) {
-                require(success, "exec failure revert tx");
+            if (address(addrs[i]).balance > 0) {
+                Wallet(payable(addrs[i])).withdraw(receiver);
             }
         }
     }
 
-    function withdrawAll(address payable receiver) public {
-        Wallet[] memory addrs = wallets[msg.sender];
+    function _withdrawToken(address payable receiver, IERC20 token, address[] memory addrs) internal {
         uint256 size = addrs.length;
         for (uint256 i = 0; i < size; i++) {
-            addrs[i].withdraw(receiver);
-        }
-    }
-
-    function withdrawBatch(address payable receiver, address[] calldata addrs) public {
-        uint256 size = addrs.length;
-        for (uint256 i = 0; i < size; i++) {
-            Wallet(payable(addrs[i])).withdraw(receiver);
-        }
-    }
-
-    function withdrawTokenAll(address receiver, address token) public {
-        Wallet[] memory addrs = wallets[msg.sender];
-        uint256 size = addrs.length;
-        for (uint256 i = 0; i < size; i++) {
-            addrs[i].withdrawToken(receiver, token);
-        }
-    }
-
-    function withdrawTokenBatch(address payable receiver, address token, address[] calldata addrs) public {
-        uint256 size = addrs.length;
-        for (uint256 i = 0; i < size; i++) {
-            Wallet(payable(addrs[i])).withdrawToken(receiver, token);
+            if (token.balanceOf(addrs[i]) > 0) {
+                Wallet(payable(addrs[i])).withdrawToken(receiver, token);
+            }
         }
     }
 
@@ -133,7 +141,7 @@ contract WalletOperator is Ownable {
         return wallets[caller].length;
     }
 
-    function userWallet(address caller) public view returns (Wallet[] memory){
+    function userWallet(address caller) public view returns (address[] memory){
         return wallets[caller];
     }
-} 
+}
